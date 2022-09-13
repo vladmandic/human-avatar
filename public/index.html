@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Human Avatar Demo</title>
+    <meta name="viewport" content="width=device-width" id="viewport">
+    <meta name="keywords" content="human">
+    <meta name="application-name" content="human avatar">
+    <meta name="description" content="Human Avatar Demo">
+    <meta name="msapplication-tooltip" content="Human Avatar Demo">
+    <meta name="theme-color" content="#000000">
+    <link rel="shortcut icon" href="./favicon.ico" type="image/x-icon">
+    <script src="./dist/index.js" type="module"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font/css/materialdesignicons.min.css" rel="stylesheet"> <!-- https://materialdesignicons.com/ -->
+    <style>
+      @font-face { font-family: 'CenturyGothic'; font-display: swap; font-style: normal; font-weight: 100; src: local('CenturyGothic'), url('./assets/century-gothic.ttf') }
+      html { font-family: 'CenturyGothic'; font-size: 16px; font-variant: small-caps; }
+      body {margin: 0;background: black;color: white;overflow-x: hidden;width: 100vw;height: 100vh;}
+      ::-webkit-scrollbar { display: none; width: 0px; }
+      input { font-family: 'CenturyGothic'; font-size: 0.875rem; font-variant: small-caps; }
+      select { font-family: 'CenturyGothic'; font-size: 0.875rem; font-variant: small-caps; }
+      th { text-align: center; background: #ffc100; color: black; }
+      td { padding: 3px 10px; border-top-width: 0; border-left-width: 0; font-family: monospace; color: #BBBBBB; font-size: 0.9rem; text-align: left; }
+      .chart { position: fixed; z-index: 10; display: none }
+      .menu {position: absolute; left: 0;top: 0;width: 220px;padding: 12px;min-height: 100%;margin: 0;overflow: scroll;visibility: hidden;max-height: 2000px;}
+      .menu:hover { background-color: black }
+      .menuSection { font-weight: 800; overflow: hidden; margin-bottom: 2rem; letter-spacing: 3px; line-height: 1.4rem; user-select: none; }
+      .menuItem { font-weight: 400; margin-left: 6px; letter-spacing: 0px;}
+      .menuHide:hover { color:yellow; transform: scale(1.2); }
+      .menuBtnWide { margin: 4px; padding: 8px; background-color: #50555C; color: white; font-family: 'CenturyGothic'; font-variant: small-caps; width: 95%; letter-spacing: 1px; border-width: 0; box-shadow: 6px 6px 8px 2px #333333; }
+      .menuBtnWide:hover { background-color: #ffc100 }
+      .menuBtnSpan { float: right; letter-spacing: -4px; }
+      .menuBtnIcon { margin: 0 2px 2px 0; padding: 0; background-color: #50555C; color: white; width: 48px; height: 48px; font-size: 1.625rem; border-width: 0; border-radius: 0; box-shadow: 6px 6px 8px 2px #333333; transition: all 0.5s; letter-spacing: -4px; }
+      .menuBtnIcon:hover { background-color: #ffc100; opacity: 60%; }
+      .menuSelect { font-family: 'CenturyGothic'; font-size: 1rem; font-variant: small-caps; height: 24px; width: 95%; background-color: #666666; color: white; padding: 2px; margin: 4px; box-shadow: 6px 6px 8px 2px #333333; }
+      .menuRange { background-color: #50555C; color: white; font-size: 0.7rem; margin: 4px; padding: 2px; box-shadow: 6px 6px 8px 2px #333333; width: 95%; }
+      input[type=range] { width: 60%; height: 16px; appearance: none; margin: 4px; margin-right: 8px; background: beige; box-shadow: 6px 6px 8px 2px #333333; }
+      input[type=range]:focus { outline: none; }
+      input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 12px; cursor: pointer; border-radius: 0; border: 0px solid #000000; }
+      input[type=range]::-webkit-slider-thumb { box-shadow: 0px 0px 0px #000000; border: 0px solid #000000; height: 12px; width: 24px; border-radius: 0; background: #770033; cursor: pointer; appearance: none; margin-top: 0px; }
+      input[type=range]:focus::-webkit-slider-runnable-track { background: #50555C; }
+    </style>
+  </head>
+  <body>
+    <pre id="status" class="status" style="visibility: hidden; position: absolute; top: 12px; right: 8px; background-color: #666666; padding: 8px; cursor: alias; box-shadow: 6px 6px 8px 2px #333333; z-index: 1">loading</pre>
+    <canvas id="output" width=1920 height=1080 style="width: 100%; height: 100%; position: fixed; top: 0; left: 0"></canvas>
+    <pre id="log" class="log" style="visibility: hidden; position: absolute; bottom: 0; left: 210px; height: 250px; width: 100%; pointer-events: none; overflow: hidden; color: #dddddd;"></pre>
+    <div id="inspector" style="position: absolute; top: 0; right: 0; max-width: 800px; height: 100%; display: flex;"></div>
+    <div id="json"></div>
+    <canvas id="chart" class="chart" width=400 height=600></canvas>
+
+  <!-- menu -->
+  <div id="menu" class="menu">
+    <div id="media"></div>
+    <div id="menuProcessingOptions" class="menuSection">processing options<span class="menuHide mdi mdi-dots-horizontal" style="float:right"></span><br>
+      <span class="menuItem">filters<br>
+        <form class="menuRange">
+          <input id="menuMinScore" name="menuMinScore" type="range" min="0.1" max="1" step="0.01" value="1.00">
+          <output id="menuMinScoreVal" name="menuMinScoreVal">min score: 1.00</output><br>
+          <input id="menuMaxPersons" name="menuMaxPersons" type="range" min="1" max="20" step="1" value="1">
+          <output id="menuMaxPersonsVal" name="menuMaxPersonsVal">max persons: 1</output><br>
+        </form>
+      </span>
+      <span class="menuItem">interpolation
+        <form class="menuRange">
+          <input id="menuInterpolation" name="menuInterpolation" type="range" min="0" max="99" step="1" value="0">
+          <output id="menuInterpolationVal" name="menuInterpolationVal">steps: 0</output><br>
+        </form>
+      </span>
+      <span class="menuItem">scene scale<br>
+        <form class="menuRange">
+          <input id="menuScaleSceneX" name="menuScaleSceneX" type="range" min="-5" max="5" step="0.01" value="0">
+          <output id="menuScaleSceneXVal" name="menuScaleSceneXVal">x-axis: 0.00</output><br>
+          <input id="menuScaleSceneY" name="menuScaleSceneY" type="range" min="-5" max="5" step="0.01" value="0">
+          <output id="menuScaleSceneYVal" name="menuScaleSceneYVal">y-axis: 0.00</output><br>
+          <input id="menuScaleSceneZ" name="menuScaleSceneZ" type="range" min="-5" max="5" step="0.01" value="0">
+          <output id="menuScaleSceneZVal" name="menuScaleSceneZVal">z-axis: 0.00</output><br>
+        </form>
+        <span class="menuItem">ground<br>
+          <div style="display: flex">
+            <button id="menuBtnGroundEnabled" class="menuBtnWide" style="width: 20%">ground<br>enabled</button>
+            <form class="menuRange">
+              <input id="menuGroundRotation" name="menuGroundRotation" type="range" min="-3.14" max="3.14" step="0.01" value="0">
+              <output id="menuGroundRotationVal" name="menuGroundRotationVal">angle: 0.00</output><br>
+              <input id="menuGroundLevel" name="menuGroundLevel" type="range" min="-10" max="10" step="0.01" value="0">
+              <output id="menuGroundLevelVal" name="menuGroundLevelVal">offset: 0.00</output><br>
+            </form>
+          </div>
+      </span>
+      <span class="menuItem">keypoints scalling<br>
+        <form class="menuRange">
+          <input id="menuScalePersonX" name="menuScalePersonX" type="range" min="-5" max="5" step="0.01" value="0">
+          <output id="menuScalePersonXVal" name="menuScalePersonXVal">x-axis: 0.00</output><br>
+          <input id="menuScalePersonY" name="menuScalePersonY" type="range" min="-5" max="5" step="0.01" value="0">
+          <output id="menuScalePersonYVal" name="menuScalePersonYVal">y-axis: 0.00</output><br>
+          <input id="menuScalePersonZ" name="menuScalePersonZ" type="range" min="-5" max="5" step="0.01" value="0">
+          <output id="menuScalePersonZVal" name="menuScalePersonZVal">z-axis: 0.00</output><br>
+        </form>
+      </span>
+      <select id="menuModel" name="menuModel" title="model" class="menuSelect">
+        <option value="skeleton" selected>model: avatar</option>
+        <option value="simple">model: simple</option>
+        <option value="both">model: combined</option>
+      </select>
+      <select id="menuMaterial" name="menuModel" title="model" class="menuSelect">
+        <option value="standard">material: standard</option>
+        <option value="glass" selected>material: glass</option>
+        <option value="metal">material: metal</option>
+      </select>
+      <button id="menuBtnAutoScale" class="menuBtnWide" style="width: 28%">skeleton<br>autoscale</button>
+      <button id="menuBtnWireframeBone" class="menuBtnWide" style="width: 28%">skeleton<br>wireframe</button>
+      <button id="menuBtnWireframeJoint" class="menuBtnWide" style="width: 28%">joints<br>wireframe</button>
+    </div>
+    <div id="menuViewControls" class="menuSection">view controls<span class="menuHide mdi mdi-dots-horizontal" style="float:right"></span><br><br>
+      <div style="display: grid">
+        <div>
+          <span class="menuItem" style="float: left; margin-top: 8px; margin-left: 8px">position</span>
+          <span class="menuBtnSpan">
+            <button id="menuCameraViewFront" class="menuBtnIcon mdi mdi-arrow-up-box" title="front view"></button>
+            <button id="menuCameraViewLSide" class="menuBtnIcon mdi mdi-arrow-left-box" title="left-side view"></button>
+            <button id="menuCameraViewRSide" class="menuBtnIcon mdi mdi-arrow-right-box" title="right-side view"></button>
+            <button id="menuCameraViewTop" class="menuBtnIcon mdi mdi-arrow-down-box" title="top-down view"></button>
+          </span>
+        </div>
+        <div>
+          <span class="menuItem" style="float: left; margin-top: 8px; margin-left: 8px">target</span>
+          <span class="menuBtnSpan">
+            <button id="menuBtnUpdatePosition" class="menuBtnIcon mdi mdi-target-account" title="track position"></button>
+            <button id="menuCameraTargetCenter" class="menuBtnIcon mdi mdi-image-filter-center-focus" title="center on target"></button>
+            <button id="menuCameraAutoFrame" class="menuBtnIcon mdi mdi-move-resize" title="zoom on target"></button>
+          </span>
+        </div>
+        <div>
+          <span class="menuItem" style="float: left; margin-top: 8px; margin-left: 8px">rotate</span>
+          <span class="menuBtnSpan">
+            <button id="menuCameraAutoRotate" class="menuBtnIcon mdi mdi-axis-z-rotate-counterclockwise" title="auto rotate"></button>
+            <button id="menuCameraRotateAlpha" class="menuBtnIcon mdi mdi-rotate-360" title="rotate alpha 360"></button>
+            <button id="menuCameraRotateBeta" class="menuBtnIcon mdi mdi-rotate-360" title="rotate beta 360"></button>
+          </span>
+        </div>
+        <div>
+          <span class="menuItem" style="float: left; margin-top: 8px; margin-left: 8px">views</span>
+          <span class="menuBtnSpan">
+            <button id="menuViewport1" class="menuBtnIcon mdi mdi-numeric-1-box"></button>
+            <button id="menuViewport2" class="menuBtnIcon mdi mdi-numeric-2-box"></button>
+            <button id="menuViewport3" class="menuBtnIcon mdi mdi-numeric-3-box"></button>
+            <button id="menuViewport4" class="menuBtnIcon mdi mdi-numeric-4-box"></button>
+          </span>
+        </div>
+        <div>
+          <span class="menuItem" style="float: left; margin-top: 8px; margin-left: 8px">accesories</span>
+          <span class="menuBtnSpan">
+            <button id="menuBtnAnchors" class="menuBtnIcon mdi mdi-anchor" title="show bone anchors"></button>
+            <button id="menuBtnAxisTitle" class="menuBtnIcon mdi mdi-sign-text" title="show axis titles"></button>
+            <button id="menuBtnBBoxGizmo" class="menuBtnIcon mdi mdi-package-variant-closed" title="bounding box gizmo"></button>
+          </span>
+        </div>
+      </div>
+    </div>
+    <div id="menuPersonAnalysis" class="menuSection">person analysis<span class="menuHide mdi mdi-dots-horizontal" style="float:right"></span><br><br>
+      <div style="display: grid">
+        <div>
+          <span class="menuItem" style="float: left; margin-top: 8px; margin-left: 8px">show</span>
+          <span class="menuBtnSpan">
+            <button id="menuBtnRotation" class="menuBtnIcon mdi mdi-angle-acute" title="bone rotation"></button>
+            <button id="menuBtnVectors" class="menuBtnIcon mdi mdi-arrow-decision" title="direction vectors"></button>
+            <button id="menuBtnTrace" class="menuBtnIcon mdi mdi-chart-timeline-variant-shimmer" title="bone tracing"></button>
+            <button id="menuBtnChart" class="menuBtnIcon mdi mdi-chart-areaspline" title="bone chart"></button>
+          </span>
+        </div>
+        <div id="menuLimits" class="menuItem" style="text-align: right"></div>
+        <div>
+          <span class="menuItem" style="float: left; margin-top: 8px; margin-left: 8px">limits</span>
+          <span class="menuBtnSpan">
+            <button id="menuBtnLimitHighlight" class="menuBtnIcon mdi mdi-lightbulb" title="bone highlight"></button>
+            <button id="menuBtnLimitShader" class="menuBtnIcon mdi mdi-sun-wireless" title="bone shader"></button>
+            <button id="menuBtnLimitMax" class="menuBtnIcon mdi mdi-axis-y-arrow" title="maximums"></button>
+            <button id="menuBtnLimitTrack" class="menuBtnIcon mdi mdi-counter" title="track motion"></button>
+          </span>
+        </div>
+        <div>
+          <span class="menuItem" style="float: left; margin-top: 8px; margin-left: 8px">details</span>
+          <span id="menuBtnBoneListImage" class="menuItem" style="float: right; margin-top: 8px; margin-right: 8px; color: #CCCCFF; cursor: pointer">image</span>
+          <span id="menuBtnBoneListText" class="menuItem" style="float: right; margin-top: 8px; color: #CCCCFF; cursor: pointer">text |</span>
+          <span id="menuBtnBoneListNone" class="menuItem" style="float: right; margin-top: 8px; color: #CCCCFF; cursor: pointer">none |</span>
+          <span id="menuBtnBoneListAll" class="menuItem" style="float: right; margin-top: 8px; color: #CCCCFF; cursor: pointer">all |</span>
+        </div>
+        <div id="menuBoneList" class="menuItem" style="display: none; margin-left: 16px; margin-top: 8px"></div>
+        <img id="menuBoneImage" class="menuItem" style="display: block; width: 328px; margin-top: 16px; margin-left: 0" src="./assets/avatar.png">
+      </div>
+    </div>
+    <div id="menuUtility" class="menuSection">utility<span class="menuHide mdi mdi-dots-horizontal" style="float:right"></span><br>
+      <button id="menuBtnRecordVideo" class="menuBtnWide" style="width: 40%">record video</button>
+      <label for="menuRecordFPS" style="font-size: 0.625rem">FPS</label>
+      <input type="number" id="menuRecordFPS" name="menuRecordFPS" min="1" max="60" value="30" style="background-color: beige">
+      <button id="menuBtnRecordScreenshot" class="menuBtnWide" style="width: 40%">take screenshot</button>
+      <label for="menuBtnRecordScreenshotX" style="font-size: 0.625rem">x</label>
+      <input type="number" id="menuRecordResolutionX" name="menuRecordResolutionX" min="10" max="10000" value="1920" style="background-color: beige; width: 50px">
+      <label for="menuBtnRecordScreenshotY" style="font-size: 0.625rem">y</label>
+      <input type="number" id="menuRecordResolutionY" name="menuRecordResolutionY" min="10" max="10000" value="1080" style="background-color: beige; width: 50px">
+    </div>
+    <div id="menuDiagnostics" class="menuSection">diagnostics<span class="menuHide mdi mdi-dots-horizontal" style="float:right"></span><br>
+      <button id="menuBtnInspector" class="menuBtnWide">show inspector</button><br>
+      <button id="menuBtnLog" class="menuBtnWide">show log</button><br>
+      <button id="menuBtnFrustum" class="menuBtnWide">show light frustum</button>
+      <button id="menuBtnStatus" class="menuBtnWide">show status bar</button><br>
+    </div>
+  </div>
+  <!-- menu -->
+
+  </body>
+</html>

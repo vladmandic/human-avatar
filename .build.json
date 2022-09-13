@@ -1,0 +1,56 @@
+{
+  "log": {
+    "enabled": false,
+    "debug": false,
+    "console": true
+  },
+  "profiles": {
+    "serve": ["serve"],
+    "build": ["clean", "compile", "lint"],
+    "dev": ["serve", "watch", "compile"],
+    "lint": ["lint"]
+  },
+  "clean": {
+    "locations": []
+  },
+  "lint": {
+    "locations": [ "src/**/*.ts" ],
+    "rules": { }
+  },
+  "watch": {
+    "locations": [ "src/**/*" ]
+  },
+  "serve": {
+    "sslKey": "public/https.key",
+    "sslCrt": "public/https.crt",
+    "httpPort": 8000,
+    "httpsPort": 8001,
+    "documentRoot": "./public",
+    "defaultFolder": ".",
+    "defaultFile": "index.html"
+  },
+  "build": {
+    "global": {
+      "target": "esnext",
+      "format": "esm",
+      "platform": "browser",
+      "minify": false,
+      "sourcemap": true,
+      "treeShaking": true,
+      "ignoreAnnotations": false,
+      "banner": { "js": "/*\n  Human Avatar Demo\n  author: <https://github.com/vladmandic>'\n*/\n" }
+    },
+    "targets": [
+      {
+        "name": "main",
+        "input": "src/index.ts",
+        "output": "./public/dist/index.js"
+      },
+      {
+        "name": "work",
+        "input": "src/live/humanWorker.ts",
+        "output": "./public/dist/worker.js"
+      }
+   ]
+  }
+}
