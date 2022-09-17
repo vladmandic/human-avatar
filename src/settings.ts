@@ -2,10 +2,10 @@
  * JSON with default settings
  */
 
-import type { EnvironmentOptions, MotionOptions, RendererOptions, PersonOptions, MenuOptions, SceneOptions, TelemetryOptions, LimitsOptions, Point } from './shared/types';
+import type { EnvironmentOptions, MotionOptions, RendererOptions, PersonOptions, MenuOptions, SceneOptions, TelemetryOptions, LimitsOptions, Point } from './types';
 import { darkTheme } from './themes';
 
-export type Settings = {
+type Settings = {
   environment: EnvironmentOptions,
   motion: MotionOptions,
   renderer: RendererOptions,
@@ -34,8 +34,6 @@ export const settings: Settings = {
     btnDefaultColor: 'rgb(80, 85, 92)',
     btnUncheckedColor: 'rgb(200, 100, 100)',
     btnCheckedColor: 'rgb(100, 100, 200)',
-    allowImages: true,
-    allowVideos: true,
   },
 
   // renderer options
@@ -62,9 +60,7 @@ export const settings: Settings = {
   environment: {
     environmentTexture: './assets/scene-environment.env',
     skyboxTexture: './assets/scene-skybox.dds',
-    groundTexture: './assets/scene-ground.env',
     skyboxSize: 100,
-    groundSize: 40,
   },
 
   scene: {
@@ -86,11 +82,8 @@ export const settings: Settings = {
   motion: {
     // show accessories
     showAnchors: true,
-    showSimpleModel: false,
-    showSkeleton: true,
     showAxisTitle: true,
     showPersonTitle: true,
-    showInputMedia: true,
     showCloneCanvases: true,
     showFrustum: false,
     enableBBoxGizmo: false,
@@ -107,21 +100,7 @@ export const settings: Settings = {
     idleRotate: true,
     idleAnimate: true,
 
-    // ground options
-    groundMirror: true,
-    groundSpotlights: true,
-    groundSpotlightColorLeft: '#FF00FF',
-    groundSpotlightColorRight: '#00FFFF',
-    groundAlpha: 0.25,
-    groundVisibility: 1,
-    groundAutoRotation: 0, // 0=never, 1=onload, 2=always
-    groundAutoPosition: 1, // 0=never, 1=onload, 2=always
-    groundRotation: [0, 0, 0],
-    groundPosition: [0, 0, 0],
-
     // person options: global
-    maxPersons: 10,
-    minScore: 0.1,
     wireframeBone: true,
     wireframeJoint: false,
     personNamePrefix: 'PERSON ',

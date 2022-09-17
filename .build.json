@@ -21,8 +21,6 @@
     "locations": [ "src/**/*" ]
   },
   "serve": {
-    "sslKey": "public/https.key",
-    "sslCrt": "public/https.crt",
     "httpPort": 8000,
     "httpsPort": 8001,
     "documentRoot": "./public",
@@ -48,7 +46,7 @@
       },
       {
         "name": "work",
-        "input": "src/live/humanWorker.ts",
+        "input": "src/worker.ts",
         "output": "./public/dist/worker.js"
       }
    ]

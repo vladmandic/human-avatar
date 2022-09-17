@@ -1,5 +1,5 @@
 /*
-  motionIQ Demo
+  Human Avatar Demo
   author: <https://github.com/vladmandic>'
 */
 
@@ -87580,7 +87580,7 @@ _analyzeMemoryLeaks = /* @__PURE__ */ new WeakMap();
 _checkSanity = /* @__PURE__ */ new WeakMap();
 _sanity = /* @__PURE__ */ new WeakMap();
 
-// src/live/humanWorker.ts
+// src/worker.ts
 var human;
 onmessage = async (msg) => {
   if (!human) {
