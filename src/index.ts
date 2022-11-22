@@ -7,7 +7,7 @@ import { settings } from './settings';
 import { dom } from './dom/elements';
 import { log } from './log';
 import { initControls } from './dom/events';
-import { initWebCam } from './dom/media';
+import { initVideo, initWebCam } from './dom/media';
 import { createScene, createPerson } from './scene/motion';
 import { initVideoPlayer } from './dom/videoPlayer';
 import type { Motion, Point, Person } from './types';
@@ -18,6 +18,7 @@ const humanConfig: Partial<H.Config> = {
   cacheSensitivity: 0,
   filter: { enabled: true, equalization: true, return: false, width: 256, height: 256 },
   body: { enabled: true, minConfidence: 0.1, maxDetected: 1, modelPath: 'blazepose-heavy.json' },
+  // body: { enabled: true, minConfidence: 0.1, maxDetected: 1, modelPath: 'movenet-thunder.json' },
   face: { enabled: false },
   hand: { enabled: false },
   object: { enabled: false },
@@ -46,7 +47,7 @@ async function requestDetect() { // detect loop runs as fast as results are rece
     return;
   }
   busy = true;
-  const processed = await human.image(dom.video); // process input in main thread
+  const processed = await human.image(dom.video, true); // process input in main thread
   const image = await processed.tensor?.data() as Float32Array; // download data to use as transferrable object
   human.tf.dispose(processed.tensor);
   workerDetector.postMessage({ image, config: humanConfig }, [image.buffer]); // immediately request next frame
@@ -92,7 +93,9 @@ async function init() {
   motion = await createScene(dom.output, { createDefaultPerson: false });
   motion.setAutoRotate(false);
   person = await createPerson('LIVE') as Person;
-  person.kinematics?.setModelType('BlazePoseKeypoints');
+  if (human.config.body.modelPath?.startsWith('movenet')) person.kinematics?.setModelType('MoveNetKeypoints');
+  else if (human.config.body.modelPath?.startsWith('blazepose')) person.kinematics?.setModelType('BlazePoseKeypoints');
+  else person.kinematics?.setModelType('SMPLKeypoints');
   await initControls(motion);
   dom.status.innerText = 'ready';
   dom.btnBoneListAll.click();
@@ -108,7 +111,8 @@ async function main() {
   log('dom', dom);
   dom.status.innerText = 'initializing';
   workerDetector.onmessage = receiveMessage; // listen to messages from worker thread
-  await initWebCam(requestDetect);
+  // await initWebCam(requestDetect);
+  await initVideo(requestDetect);
 }
 
 window.onload = main;

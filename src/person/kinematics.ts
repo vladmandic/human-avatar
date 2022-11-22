@@ -5,12 +5,13 @@
  */
 
 import { Vector3, Bone, Space, Mesh, Plane } from '@babylonjs/core';
-import { SMPLKeypoints, BlazePoseKeypoints } from './modelConstants';
+import { SMPLKeypoints, BlazePoseKeypoints, MoveNetKeypoints } from './modelConstants';
 import { calcMiddle } from './mathCalculations';
+import { log } from '../log';
 import type { Person, Point } from '../types';
 
 export class Kinematics {
-  model: typeof SMPLKeypoints | typeof BlazePoseKeypoints;
+  model: typeof SMPLKeypoints | typeof BlazePoseKeypoints | typeof MoveNetKeypoints;
   person: Person;
   position: Record<string, Point> = {};
   bone: Record<string, Bone> = {};
@@ -29,8 +30,10 @@ export class Kinematics {
     for (const mesh of this.person.positions.getChildMeshes()) this.origin[mesh.name] = mesh as Mesh;
   }
 
-  setModelType(model: 'SMPLKeypoints' | 'BlazePoseKeypoints') {
+  setModelType(model: 'SMPLKeypoints' | 'BlazePoseKeypoints' | 'MoveNetKeypoints') {
+    log('set model type:', model);
     if (model === 'BlazePoseKeypoints') this.model = BlazePoseKeypoints;
+    if (model === 'MoveNetKeypoints') this.model = MoveNetKeypoints;
     if (model === 'SMPLKeypoints') this.model = SMPLKeypoints;
   }
 
@@ -73,7 +76,16 @@ export class Kinematics {
       this.position.Spine2 = calcMiddle(this.position.Pelvis, this.position.MidShoulder, 1, 2); // higher
       this.position.Head = [this.position.MidShoulder[0], this.position.MidShoulder[1] * 1.3, kpts[this.model.nose][2] / 4];
       this.position.Neck = calcMiddle(this.position.MidShoulder, this.position.Head);
-    } else {
+    }
+    if (this.model === MoveNetKeypoints) {
+      this.position.Pelvis = calcMiddle(kpts[this.model.leftHip], kpts[this.model.rightHip]);
+      this.position.Spine = calcMiddle(this.position.Pelvis, this.position.MidShoulder, 2, 1); // lower
+      this.position.Spine1 = calcMiddle(this.position.Pelvis, this.position.MidShoulder, 1, 1); // slightly below center
+      this.position.Spine2 = calcMiddle(this.position.Pelvis, this.position.MidShoulder, 1, 2); // higher
+      this.position.Head = [this.position.MidShoulder[0], this.position.MidShoulder[1] * 1.3, (kpts[this.model.nose]?.[2] || 0) / 4];
+      this.position.Neck = calcMiddle(this.position.MidShoulder, this.position.Head);
+    }
+    if (this.model === SMPLKeypoints) {
       this.position.MidHip = calcMiddle(kpts[this.model.leftHip], kpts[this.model.rightHip]);
       this.position.Pelvis = kpts[this.model.pelvis];
       this.position.Spine = kpts[this.model.spine];
@@ -133,14 +145,14 @@ export class Kinematics {
     this.setTarget('LeftShoulder', kpts, this.model.leftShoulder);
     this.setTarget('LeftArm', kpts, this.model.leftElbow);
     this.setTarget('LeftForeArm', kpts, this.model.leftWrist);
-    this.setTarget('LeftHand', kpts, this.model.leftIndex);
+    this.setTarget('LeftHand', kpts, this.model.leftIndex || this.model.leftWrist);
     this.setTarget('LeftUpLeg', kpts, this.model.leftKnee);
     this.setTarget('LeftLeg', kpts, this.model.leftAnkle);
     this.setTarget('LeftFoot', kpts, this.model.leftFoot);
     this.setTarget('RightShoulder', kpts, this.model.rightShoulder);
     this.setTarget('RightArm', kpts, this.model.rightElbow);
     this.setTarget('RightForeArm', kpts, this.model.rightWrist);
-    this.setTarget('RightHand', kpts, this.model.rightIndex);
+    this.setTarget('RightHand', kpts, this.model.rightIndex || this.model.rightWrist);
     this.setTarget('RightUpLeg', kpts, this.model.rightKnee);
     this.setTarget('RightLeg', kpts, this.model.rightAnkle);
     this.setTarget('RightFoot', kpts, this.model.rightFoot);
@@ -149,7 +161,7 @@ export class Kinematics {
 
   setLimbRotation = () => {
     const kpts = this.person.normalized;
-    const facingForward = Math.sign(kpts[this.model.leftHip][0] - kpts[this.model.rightHip][0]);
+    const facingForward = kpts[this.model.leftHip] && kpts[this.model.rightHip] ? Math.sign(kpts[this.model.leftHip][0] - kpts[this.model.rightHip][0]) : 0;
     for (const [key, val] of Object.entries(this.person.lookControllers)) {
       if (key.startsWith('Left')) val.upAxis = new Vector3(-facingForward, 1, -facingForward);
       else if (key.startsWith('Right')) val.upAxis = new Vector3(facingForward, 1, -facingForward);
@@ -183,7 +195,7 @@ export class Kinematics {
     const kpts = this.person.normalized;
     if (this.bone.LeftToeBase) this.bone.LeftToeBase.rotation = new Vector3(-this.bone.LeftFoot.rotation.x, 0, 0); // bend toes opposite of foot so they "touch" the ground
     if (this.bone.RightToeBase) this.bone.RightToeBase.rotation = new Vector3(-this.bone.RightFoot.rotation.x, 0, 0);
-    if (this.person.motion.options.ikLevel < 1) {
+    if (this.person.motion.options.ikLevel < 1 && this.model.leftIndex && this.model.rightIndex) {
       const l1 = Vector3.Distance(new Vector3(...kpts[this.model.leftElbow]), new Vector3(...kpts[this.model.leftWrist]));
       const l2 = Vector3.Distance(new Vector3(...kpts[this.model.leftIndex]), new Vector3(...kpts[this.model.leftWrist]));
       const r1 = Vector3.Distance(new Vector3(...kpts[this.model.rightElbow]), new Vector3(...kpts[this.model.rightWrist]));

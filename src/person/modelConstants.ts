@@ -35,6 +35,26 @@ export const SMPLKeypoints: Record<string, number> = {
   rightFoot: 11,
 };
 
+export const MoveNetKeypoints: Record<string, number> = {
+  node: 0,
+  leftEye: 1,
+  rightEye: 2,
+  leftEar: 3,
+  rightEar: 4,
+  leftShoulder: 5,
+  rightShoulder: 6,
+  leftElbow: 7,
+  rightElbow: 8,
+  leftWrist: 9,
+  rightWrist: 10,
+  leftHip: 11,
+  rightHip: 12,
+  leftKnee: 13,
+  rightKnee: 14,
+  leftAnkle: 15,
+  rightAnkle: 16,
+};
+
 export const BlazePoseKeypoints: Record<string, number> = {
   nose: 0,
   leftEyeInside: 1,

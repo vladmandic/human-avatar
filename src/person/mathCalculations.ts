@@ -9,7 +9,12 @@ export const calcAngle = (sx: number, sy: number, dx: number, dy: number) => Mat
 
 export const calcDiff = (a: Point, b: Point): Point => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
 
-export const calcMiddle = (a: Point, b: Point, aw = 1, bw = 1): Point => [(aw * a[0] + bw * b[0]) / (aw + bw), (aw * a[1] + bw * b[1]) / (aw + bw), (aw * a[2] + bw * b[2]) / (aw + bw)];
+export const calcMiddle = (a: Point, b: Point, aw = 1, bw = 1): Point => {
+  if (a && b) return [(aw * a[0] + bw * b[0]) / (aw + bw), (aw * a[1] + bw * b[1]) / (aw + bw), (aw * (a[2] || 0) + bw * (b[2] || 0)) / (aw + bw)];
+  if (a) return a;
+  if (b) return b;
+  return [0, 0, 0];
+};
 
 export const calcSum = (a: Point, b: Point): Point => [(a[0] + b[0]), (a[1] + b[1]), (a[2] + b[2])];
 
@@ -35,6 +40,9 @@ export const interpolateData = (current: MotionData, interpolated: MotionData, o
 };
 
 export const normalizeKeypoints = (kpts: Point[], targetScale: Point, personOffset: Point, normalizedOffsets: Point[]): Point[] => {
+  for (const kpt of kpts) {
+    if (Number.isNaN(kpt[2])) kpt[2] = 0; // add z-axis
+  }
   let xyz = [kpts.map((kpt) => kpt[0]), kpts.map((kpt) => kpt[1]), kpts.map((kpt) => kpt[2])];
   let max = [Math.max(...xyz[0]), Math.max(...xyz[1]), Math.max(...xyz[2])] as Point;
   let min = [Math.min(...xyz[0]), Math.min(...xyz[1]), Math.min(...xyz[2])] as Point;

@@ -5,7 +5,6 @@
 
 import type { Bone, AxesViewer, ParticleSystem, GPUParticleSystem } from '@babylonjs/core';
 import type { Person, TextMesh, Point } from '../types';
-import { log } from '../log';
 import { BoneTelemetryList } from '../person/modelConstants';
 import { relativeAngle } from '../person/mathCalculations';
 import { drawRotation, setRotationVisibility } from './rotations';
@@ -38,7 +37,7 @@ export class Telemetry {
   getBone = (name: string): Bone => (this.person.skeleton ? this.person.skeleton.bones.find((bone) => bone.name === name) : null) as Bone;
 
   setActive(boneName: string, boneActive: boolean) {
-    log('telemetry setactive:', { boneName, boneActive });
+    // log('telemetry setactive:', { boneName, boneActive });
     setRotationVisibility(this, boneName, boneActive);
     setTraceVisibility(this, boneName, boneActive);
     setHighlightVisibility(this, boneName, boneActive);

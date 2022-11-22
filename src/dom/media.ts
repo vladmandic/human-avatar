@@ -19,3 +19,15 @@ export async function initWebCam(callback: TCallback) {
   };
   dom.video.play();
 }
+
+export async function initVideo(callback: TCallback) {
+  dom.video.src = 'assets/excercise.mp4';
+  // log('video stream:', { stream });
+  await new Promise((resolve) => { dom.video.oncanplaythrough = () => resolve(true); });
+  dom.video.style.visibility = 'visible';
+  dom.video.onplay = () => {
+    updateVideoBar();
+    callback(null);
+  };
+  dom.video.play();
+}

@@ -8,7 +8,7 @@ type MenuSection = 'menuSceneSettings' | 'menuProcessingOptions' | 'menuViewCont
 async function setMenuVisibility(menuSection: MenuSection, visibility: 0 | 1 | 2) {
   const el = document.getElementById(menuSection) as HTMLDivElement;
   if (!el) return;
-  log('menu set visibility', { menuSection, visibility });
+  // log('menu set visibility', { menuSection, visibility });
   if (visibility === 0) {
     el.style.display = 'none';
     el.style.visibility = 'hidden';
